@@ -11,12 +11,15 @@ export * from "./sinks/datadog";
 import * as metrics from "./metrics";
 import { TailExporter } from "./tail";
 import { DatadogMetricSink } from "./sinks/datadog";
+import { OtelMetricSink } from "./sinks/otel";
 import { WorkersAnalyticsEngineSink } from "./sinks/workersAnalyticsEngine";
 
-export { metrics, TailExporter, DatadogMetricSink, WorkersAnalyticsEngineSink };
+export { metrics, TailExporter, DatadogMetricSink, WorkersAnalyticsEngineSink, OtelMetricSink };
+
 export default {
   metrics,
   TailExporter,
   DatadogMetricSink,
   WorkersAnalyticsEngineSink,
+  OtelMetricSink
 };

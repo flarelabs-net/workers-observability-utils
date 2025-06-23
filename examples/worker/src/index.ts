@@ -1,4 +1,4 @@
-import * as metrics from 'workers-observability-utils/metrics';
+import { metrics } from 'workers-observability-utils';
 
 export interface Env {
 	// Datadog API keys

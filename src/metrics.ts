@@ -68,3 +68,9 @@ export function histogram(
 
   metricsChannel.publish(payload);
 }
+
+export default {
+  count,
+  gauge,
+  histogram,
+}

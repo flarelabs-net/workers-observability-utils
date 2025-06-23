@@ -8,7 +8,7 @@ import {
   afterAll,
 } from "vitest";
 import { subscribe, unsubscribe } from "node:diagnostics_channel";
-import { count, gauge, histogram } from "./metrics";
+import { metrics } from "./index";
 import {
   MetricType,
   METRICS_CHANNEL_NAME,
@@ -36,7 +36,7 @@ describe("metrics", () => {
 
   describe("count", () => {
     it("should publish count metric with custom value and tags", () => {
-      count("test.counter", 5, { service: "api", version: 1 });
+      metrics.count("test.counter", 5, { service: "api", version: 1 });
 
       expect(receivedMessages).toHaveLength(1);
       expect(receivedMessages[0]).toEqual({
@@ -50,7 +50,7 @@ describe("metrics", () => {
 
   describe("gauge", () => {
     it("should publish gauge metric with tags", () => {
-      gauge("test.gauge", 100, { region: "us-east-1", active: true });
+      metrics.gauge("test.gauge", 100, { region: "us-east-1", active: true });
 
       expect(receivedMessages).toHaveLength(1);
       expect(receivedMessages[0]).toEqual({
@@ -69,7 +69,7 @@ describe("metrics", () => {
         percentiles: [0.5, 0.95, 0.99],
       };
 
-      histogram("test.histogram", 150, options, { endpoint: "/api/users" });
+      metrics.histogram("test.histogram", 150, options, { endpoint: "/api/users" });
 
       expect(receivedMessages).toHaveLength(1);
       expect(receivedMessages[0]).toEqual({
