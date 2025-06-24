@@ -23,16 +23,26 @@ export interface DatadogMetricSinkOptions {
  */
 export class DatadogMetricSink implements MetricSink {
   private readonly options: {
-    apiKey?: string;
-    site?: string;
-    endpoint?: string;
+    apiKey: string;
+    site: string;
+    endpoint: string;
   };
 
   constructor(options?: DatadogMetricSinkOptions) {
+    // @ts-ignore
+    let apiKey = options?.apiKey || env.DD_API_KEY || env.DATADOG_API_KEY;
+    if (!apiKey || apiKey.length === 0) {
+      console.error("Datadog API key was not found. Provide it in the sink options or set the DD_API_KEY environment variable. Metrics will not be sent to Datadog.");
+    }
+
+    // @ts-ignore
+    let site = options?.site || env.DD_SITE || "datadoghq.com";
+    let endpoint = options?.endpoint || `https://api.${site}/api/v1/series`;
+
     this.options = {
-      apiKey: options?.apiKey,
-      site: options?.site || "datadoghq.com",
-      endpoint: options?.endpoint,
+      apiKey,
+      site,
+      endpoint,
     };
   }
 
@@ -76,16 +86,16 @@ export class DatadogMetricSink implements MetricSink {
    * Send metrics to Datadog API
    */
   private async sendToDatadog(metrics: DatadogMetric[]): Promise<void> {
-    const endpoint =
-      this.options.endpoint || `https://api.${this.options.site}/api/v1/series`;
+    if (!this.options.apiKey || this.options.apiKey.length === 0) {
+      console.warn(`Datadog API key was not found. Dropping ${metrics.length} metrics.`);
+      return;
+    }
     
-    const response = await fetch(endpoint, {
+    const response = await fetch(this.options.endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "DD-API-KEY":
-          // @ts-ignore
-          env.DD_API_KEY || env.DATADOG_API_KEY || this.options.apiKey,
+        "DD-API-KEY": this.options.apiKey,
       },
       body: JSON.stringify({ series: metrics }),
     });
