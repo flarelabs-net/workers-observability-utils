@@ -103,7 +103,7 @@ When using multiple sinks, metrics will be sent to all configured sinks in paral
 
 ```typescript
 // tail-worker/src/index.ts
-import { TailExporter, DatadogMetricSink, WorkersAnalyticsEngineSink, OtelMetricSink} from '@flarelabs-net/workers-observability-utils';
+import { TailExporter, DatadogMetricSink, WorkersAnalyticsEngineSink, OtelMetricSink } from '@flarelabs-net/workers-observability-utils';
 
 export default new TailExporter({
   metrics: {

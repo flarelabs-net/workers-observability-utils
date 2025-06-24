@@ -125,7 +125,7 @@ export class TailExporter {
   }
 
   async #performFlush(): Promise<void> {
-    const items = this.#metrics.toMetricPayloads(this.#maxBufferDuration);
+    const items = this.#metrics.toMetricPayloads();
 
     // Reset batch and flush state
     this.#flushScheduled = false;
@@ -139,7 +139,7 @@ export class TailExporter {
     try {
       if (this.#metricSinks) {
         const results = await Promise.allSettled(
-          this.#metricSinks?.map((sink) => sink.sendMetrics(items)),
+          this.#metricSinks?.filter(sink => !sink.streaming).map((sink) => sink.sendMetrics(items)),
         );
         const errors = results.filter((el) => el.status === "rejected") as PromiseRejectedResult[];
         if (errors.length > 0) {
@@ -156,7 +156,7 @@ export class TailExporter {
 
   #addDefaultMetrics(
     traceItem: TraceItem,
-    globalTags: Record<string, any>,
+    globalTags: Record<string, string | number | boolean | undefined | null>,
   ): void {
     if (this.#defaultMetricsEnabled.cpuTime) {
       this.#metrics.storeMetric({
@@ -164,7 +164,7 @@ export class TailExporter {
         name: "worker.cpu_time",
         value: traceItem.cpuTime,
         tags: globalTags,
-        timestamp: traceItem.eventTimestamp!,
+        timestamp: traceItem.eventTimestamp || Date.now(),
         options: {
           aggregates: ["max", "min", "avg"],
           percentiles: [0.5, 0.75, 0.9, 0.95, 0.99],
@@ -178,7 +178,7 @@ export class TailExporter {
         name: "worker.wall_time",
         value: traceItem.wallTime,
         tags: globalTags,
-        timestamp: traceItem.eventTimestamp!,
+        timestamp: traceItem.eventTimestamp || Date.now(),
         options: {
           aggregates: ["max", "min", "avg"],
           percentiles: [0.5, 0.75, 0.9, 0.95, 0.99],
@@ -191,7 +191,7 @@ export class TailExporter {
         name: "worker.invocation",
         value: 1,
         tags: globalTags,
-        timestamp: traceItem.eventTimestamp!,
+        timestamp: traceItem.eventTimestamp || Date.now(),
       });
     }
   }

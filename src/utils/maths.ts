@@ -1,8 +1,8 @@
-import { HistogramAggregates } from "../types";
+import type { HistogramAggregates } from "../types";
 
 export function calculateHistogramValue(
   aggregate: HistogramAggregates,
-  value: number[],
+  value: number[]
 ): number {
   if (aggregate === "count") {
     return value.length;
@@ -31,12 +31,11 @@ export function calculateHistogramValue(
     const midPoint = Math.floor(length / 2);
     if (isEven) {
       return sortedValues[midPoint - 1] + sortedValues[midPoint] / 2;
-    } else {
-      return sortedValues[midPoint];
     }
+    return sortedValues[midPoint];
   }
 
-  return NaN;
+  return Number.NaN;
 }
 
 export function calculatePercentile(sortedArr: number[], percentile: number) {

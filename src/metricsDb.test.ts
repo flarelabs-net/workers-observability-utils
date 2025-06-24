@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { MetricsDb } from "./metricsDb";
 import {
   MetricType,
-  ExportedMetricPayload,
-  HistogramAggregates,
+  type ExportedMetricPayload,
+  type HistogramAggregates,
 } from "./types";
 
 describe("MetricsDb", () => {

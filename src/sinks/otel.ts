@@ -18,7 +18,10 @@ export interface OtelMetricSinkOptions {
 }
 
 export class OtelMetricSink implements MetricSink {
-  private options: OtelMetricSinkOptions;
+  private options: OtelMetricSinkOptions & {
+    scopeName: string;
+    scopeVersion: string;
+  };
 
   constructor(options: OtelMetricSinkOptions) {
     this.options = {
@@ -77,8 +80,8 @@ export class OtelMetricSink implements MetricSink {
         }
         const scopeMetrics: ScopeMetrics = {
           scope: {
-            name: this.options.scopeName!,
-            version: this.options.scopeVersion!,
+            name: this.options.scopeName,
+            version: this.options.scopeVersion,
           },
           metrics: [metric],
         };

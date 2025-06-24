@@ -1,10 +1,10 @@
 import { calculateHistogramValue, calculatePercentile } from "./utils/maths";
 import {
-  HistogramAggregates,
-  MetricPayload,
-  ExportedMetricPayload,
+  type HistogramAggregates,
+  type MetricPayload,
+  type ExportedMetricPayload,
   MetricType,
-  Tags,
+  type Tags,
 } from "./types";
 
 interface BaseStoredMetric {
@@ -124,7 +124,7 @@ export class MetricsDb {
    * Get the Metrics in a format ready to export to various different sinks
    * @param flushWindowS
    */
-  public toMetricPayloads(flushWindowS: number): ExportedMetricPayload[] {
+  public toMetricPayloads(): ExportedMetricPayload[] {
     const payloads: ExportedMetricPayload[] = [];
 
     for (const metric of this.metrics.values()) {

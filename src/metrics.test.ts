@@ -12,8 +12,8 @@ import { metrics } from "./index";
 import {
   MetricType,
   METRICS_CHANNEL_NAME,
-  MetricPayload,
-  HistogramOptions,
+  type MetricPayload,
+  type HistogramOptions,
 } from "./types";
 
 describe("metrics", () => {

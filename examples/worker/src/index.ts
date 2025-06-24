@@ -16,7 +16,7 @@ export default {
 		// Record request content length if it exists
 		const contentLength = request.headers.get('content-length');
 		if (contentLength) {
-			metrics.gauge('worker.request.content_length', parseInt(contentLength, 10));
+			metrics.gauge('worker.request.content_length', Number.parseInt(contentLength, 10));
 		}
 
 		// Start timing the request
@@ -59,7 +59,7 @@ export default {
 			// Track response size
 			const contentLength = response.headers.get('content-length');
 			if (contentLength) {
-				metrics.gauge('worker.response.size', parseInt(contentLength, 10));
+				metrics.gauge('worker.response.size', Number.parseInt(contentLength, 10));
 			}
 		}
 
