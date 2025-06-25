@@ -4,6 +4,7 @@ export interface Env {
 	// Datadog API keys
 	DD_API_KEY?: string;
 	DATADOG_API_KEY?: string;
+	DD_SITE?: string;
 }
 
 export default {
