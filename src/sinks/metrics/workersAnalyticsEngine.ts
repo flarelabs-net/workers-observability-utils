@@ -1,12 +1,11 @@
-import type { ExportedMetricPayload } from "../types";
-import type { MetricSink } from "./sink";
+import type { ExportedMetricPayload } from "../../types";
+import type { MetricSink } from "../sink";
 
 export interface WAEMetricSinkOptions {
   /**
    * Analytics Engine dataset binding
    */
   datasetBinding: AnalyticsEngineDataset;
-  streaming?: boolean
 }
 
 /**
@@ -14,10 +13,8 @@ export interface WAEMetricSinkOptions {
  */
 export class WorkersAnalyticsEngineSink implements MetricSink {
   private readonly options: WAEMetricSinkOptions;
-  streaming?: boolean;
   constructor(options: WAEMetricSinkOptions) {
     this.options = options;
-    this.streaming = options.streaming ?? false;
   }
 
   /**

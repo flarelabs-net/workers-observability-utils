@@ -8,6 +8,15 @@ export interface Env {
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
+		console.info(`Incoming ${request.method} request to ${request.url}`);
+		console.warn(`Processing request at ${new Date().toISOString()}`);
+		console.error(`Error processing request at ${new Date().toISOString()}`);
+
+		console.debug("Structured logging supported", {
+			requestMethod: request.method,
+			requestUrl: request.url,
+			// Add any other structured fields you want
+		})
 		// Record request count metric with HTTP method tag
 		metrics.count('worker.request', 1, {
 			method: request.method,
