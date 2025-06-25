@@ -30,14 +30,14 @@ export class DatadogMetricSink implements MetricSink {
 
   constructor(options?: DatadogMetricSinkOptions) {
     // @ts-ignore
-    let apiKey = options?.apiKey || env.DD_API_KEY || env.DATADOG_API_KEY;
+    const apiKey = options?.apiKey || env.DD_API_KEY || env.DATADOG_API_KEY;
     if (!apiKey || apiKey.length === 0) {
       console.error("Datadog API key was not found. Provide it in the sink options or set the DD_API_KEY environment variable. Metrics will not be sent to Datadog.");
     }
 
     // @ts-ignore
-    let site = options?.site || env.DD_SITE || "datadoghq.com";
-    let endpoint = options?.endpoint || `https://api.${site}/api/v1/series`;
+    const site = options?.site || env.DD_SITE || "datadoghq.com";
+    const endpoint = options?.endpoint || `https://api.${site}/api/v1/series`;
 
     this.options = {
       apiKey,
