@@ -26,7 +26,7 @@ export class OtelMetricSink implements MetricSink {
   constructor(options: OtelMetricSinkOptions) {
     this.options = {
       scopeName: "workers-observability-utils",
-      scopeVersion: "1.0.0",
+      scopeVersion: "0.3.0",
       ...options,
     };
   }
