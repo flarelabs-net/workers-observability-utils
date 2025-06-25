@@ -1,4 +1,4 @@
-import { type ExportedMetricPayload, MetricType } from "../types";
+import { type ExportedMetricPayload, MetricType } from "../../types";
 
 import {
   AggregationTemporality,
@@ -8,7 +8,7 @@ import {
   type ScopeMetrics,
 } from "./otel-metrics-types";
 
-import type { MetricSink } from "./sink";
+import type { MetricSink } from "../sink";
 
 export interface OtelMetricSinkOptions {
   url: string;
@@ -18,7 +18,10 @@ export interface OtelMetricSinkOptions {
 }
 
 export class OtelMetricSink implements MetricSink {
-  private options: OtelMetricSinkOptions;
+  private options: OtelMetricSinkOptions & {
+    scopeName: string;
+    scopeVersion: string;
+  };
 
   constructor(options: OtelMetricSinkOptions) {
     this.options = {
@@ -77,8 +80,8 @@ export class OtelMetricSink implements MetricSink {
         }
         const scopeMetrics: ScopeMetrics = {
           scope: {
-            name: this.options.scopeName!,
-            version: this.options.scopeVersion!,
+            name: this.options.scopeName,
+            version: this.options.scopeVersion,
           },
           metrics: [metric],
         };

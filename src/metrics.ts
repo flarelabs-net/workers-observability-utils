@@ -1,12 +1,12 @@
-import { channel, Channel } from "node:diagnostics_channel";
+import { type Channel, channel } from "node:diagnostics_channel";
 import {
-  CountMetricPayload,
-  GaugeMetricPayload,
-  HistogramMetricPayload,
-  HistogramOptions,
+  type CountMetricPayload,
+  type GaugeMetricPayload,
+  type HistogramMetricPayload,
+  type HistogramOptions,
   METRICS_CHANNEL_NAME,
   MetricType,
-  Tags,
+  type Tags,
 } from "./types";
 
 const metricsChannel: Channel = channel(METRICS_CHANNEL_NAME);
@@ -17,7 +17,7 @@ const metricsChannel: Channel = channel(METRICS_CHANNEL_NAME);
  * @param value - The count value (incremented by)
  * @param tags - Optional tags
  */
-export function count(name: string, value: number = 1, tags: Tags = {}): void {
+export function count(name: string, value = 1, tags: Tags = {}): void {
   const payload: CountMetricPayload = {
     type: MetricType.COUNT,
     name,
