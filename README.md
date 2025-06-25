@@ -113,7 +113,7 @@ To efficiently export metrics to external providers, you should set up a dedicat
 With this library, you can send metrics to multiple destinations simultaneously. The TailExporter supports an array of metric sinks, and each sink receives the same metrics data. Currently supported sinks include:
 
 - **Datadog** - Export metrics to Datadog for visualization and alerting
-- **Workers Analytics Engine** - Store metrics in Cloudflare's Analytics Engine for custom queries and analysis
+- **Workers Analytics Engine** - Store metrics in Cloudflare's Analytics Engine for custom queries and analysis - WARNING: the default number of writes to workers analytics engine per request is 25.
 - **Otel Metrics** - Send your Metrics to any OpenTelemetry compatible collector
 
 When using multiple sinks, metrics will be sent to all configured sinks in parallel. If one sink fails, the others will still receive the metrics.

@@ -20,9 +20,6 @@ export default new TailExporter({
 					'x-honeycomb-dataset': 'metrics',
 				},
 			}),
-			new WorkersAnalyticsEngineSink({
-				datasetBinding: env.METRICS_DATASET,
-			}),
 		],
 		maxBufferSize: 10,
 		maxBufferDuration: 1,

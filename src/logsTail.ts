@@ -84,12 +84,23 @@ export class LogsTail {
       const results = await Promise.allSettled(
         this.#logSinks.map((sink) => sink.sendLogs(items)),
       );
+      const successfulSinks = results.filter((el) => el.status === "fulfilled") as PromiseFulfilledResult<void>[];
+      if (successfulSinks.length > 0) {
+        console.debug(`Flushed ${items.length} logs to ${successfulSinks.length} sink(s) successfully.`, {
+          logs: items.length,
+          sinks: successfulSinks.length,
+        });
+      }
       const errors = results.filter((el) => el.status === "rejected") as PromiseRejectedResult[];
       if (errors.length > 0) {
         const sinkErrors = errors.map((error) => {
           return `${error.reason instanceof Error ? error.reason.message : String(error.reason)}`;
         });
-        console.error(`Failed to flush logs to ${errors.length} sink(s): ${sinkErrors.join(', ')}`);
+        console.error(`Failed to flush logs to ${errors.length} sink(s): ${sinkErrors.join(', ')}`, {
+          logs: items.length,
+          sinks: errors.length,
+          errors: sinkErrors,
+        });
       }
     } catch (error) {
       console.error("Error flushing logs batch:", error);
