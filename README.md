@@ -198,7 +198,8 @@ wrangler secret put DD_API_KEY
 The Tail Worker supports the following environment variables and bindings:
 
 #### For Datadog
-- `DD_API_KEY` or `DATADOG_API_KEY`: Your Datadog API key
+- `DD_API_KEY`: Your Datadog API key
+- `DD_SITE`: the datadog url i.e. us3.datadoghq.com
 
 #### For Workers Analytics Engine
 - Requires an Analytics Engine dataset binding in your wrangler.jsonc:
