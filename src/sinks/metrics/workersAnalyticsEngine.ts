@@ -1,5 +1,5 @@
-import type { ExportedMetricPayload } from "../types";
-import type { MetricSink } from "./sink";
+import type { ExportedMetricPayload } from "../../types";
+import type { MetricSink } from "../sink";
 
 export interface WAEMetricSinkOptions {
   /**
@@ -13,7 +13,6 @@ export interface WAEMetricSinkOptions {
  */
 export class WorkersAnalyticsEngineSink implements MetricSink {
   private readonly options: WAEMetricSinkOptions;
-
   constructor(options: WAEMetricSinkOptions) {
     this.options = options;
   }

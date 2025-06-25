@@ -7,6 +7,13 @@ settings:
 importers:
 
   .:
+    dependencies:
+      flat:
+        specifier: ^6.0.1
+        version: 6.0.1
+      ulid-workers:
+        specifier: ^2.1.0
+        version: 2.1.0
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: ^0.8.32
@@ -601,6 +608,11 @@ packages:
       picomatch:
         optional: true
 
+  flat@6.0.1:
+    resolution: {integrity: sha512-/3FfIa8mbrg3xE7+wAhWeV+bd7L2Mof+xtZb5dRDKZ+wDvYJK4WDYeIOuOhre5Yv5aQObZrlbRmk3RTSiuQBtw==}
+    engines: {node: '>=18'}
+    hasBin: true
+
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
@@ -743,6 +755,9 @@ packages:
 
   ufo@1.6.1:
     resolution: {integrity: sha512-9a4/uxlTWJ4+a5i0ooc1rU7C7YOw3wT+UGqdeNNHWnOF9qcMBgLRS+4IYUqbczewFx4mLEig6gawh7X6mFlEkA==}
+
+  ulid-workers@2.1.0:
+    resolution: {integrity: sha512-D4+5fwPt5FEoGdMQtx5YwRHUZ4SDWSypraDZiXT3Y8U7T0C6h99dXhpWJQScNckoVRU+zi+BDuoBKHAffrn9vg==}
 
   undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
@@ -1294,6 +1309,8 @@ snapshots:
     optionalDependencies:
       picomatch: 4.0.2
 
+  flat@6.0.1: {}
+
   fsevents@2.3.3:
     optional: true
 
@@ -1454,6 +1471,8 @@ snapshots:
   typescript@5.8.3: {}
 
   ufo@1.6.1: {}
+
+  ulid-workers@2.1.0: {}
 
   undici-types@6.21.0: {}
 

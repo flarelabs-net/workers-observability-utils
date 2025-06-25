@@ -16,6 +16,6 @@
 		"wrangler": "^4.15.2"
 	},
 	"dependencies": {
-		"workers-observability-utils": "file:../../"
+		"@flarelabs-net/workers-observability-utils": "file:../../"
 	}
 }

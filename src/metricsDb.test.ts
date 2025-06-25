@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { MetricsDb } from "./metricsDb";
 import {
   MetricType,
-  ExportedMetricPayload,
-  HistogramAggregates,
+  type ExportedMetricPayload,
+  type HistogramAggregates,
 } from "./types";
 
 describe("MetricsDb", () => {
@@ -212,7 +212,7 @@ describe("MetricsDb", () => {
         timestamp: 2000,
       });
 
-      const payloads = metricsDb.toMetricPayloads(60);
+      const payloads = metricsDb.toMetricPayloads();
 
       expect(payloads).toHaveLength(2);
       expect(payloads).toContainEqual({
@@ -254,7 +254,7 @@ describe("MetricsDb", () => {
         },
       });
 
-      const payloads = metricsDb.toMetricPayloads(60);
+      const payloads = metricsDb.toMetricPayloads();
 
       expect(payloads).toHaveLength(2);
       expect(payloads).toContainEqual({
@@ -296,7 +296,7 @@ describe("MetricsDb", () => {
         },
       });
 
-      const payloads = metricsDb.toMetricPayloads(60);
+      const payloads = metricsDb.toMetricPayloads();
 
       expect(payloads).toHaveLength(4);
 
@@ -348,7 +348,7 @@ describe("MetricsDb", () => {
         },
       });
 
-      const payloads = metricsDb.toMetricPayloads(60);
+      const payloads = metricsDb.toMetricPayloads();
 
       expect(payloads).toHaveLength(2);
       expect(payloads).toContainEqual({
@@ -377,7 +377,7 @@ describe("MetricsDb", () => {
         timestamp: 1000,
       });
 
-      const payloads = metricsDb.toMetricPayloads(60);
+      const payloads = metricsDb.toMetricPayloads();
 
       expect(payloads).toHaveLength(0);
     });
