@@ -71,6 +71,7 @@ export class OtelLogSink implements LogSink {
           event.executionModel === "stateless" ? "Workers" : "Durable Objects",
         "cloud.region": "earth",
         "faas.name": event.scriptName,
+        "service.name": event.scriptName,
         "faas.trigger": this.mapEventTypeToTrigger(event.event),
         "faas.version": event.scriptVersion?.id || "unknown",
       });
