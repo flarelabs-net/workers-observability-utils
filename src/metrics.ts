@@ -4,6 +4,7 @@ import {
   type GaugeMetricPayload,
   type HistogramMetricPayload,
   type HistogramOptions,
+  type DistributionMetricPayload,
   METRICS_CHANNEL_NAME,
   MetricType,
   type Tags,
@@ -69,8 +70,26 @@ export function histogram(
   metricsChannel.publish(payload);
 }
 
+/**
+ * Record a distribution metric
+ * @param name - The metric name
+ * @param value - The distribution value
+ * @param tags - Optional tags
+ */
+export function distribution(name: string, value: number, tags: Tags = {}): void {
+  const payload: DistributionMetricPayload = {
+    type: MetricType.DISTRIBUTION,
+    name,
+    value,
+    tags,
+  };
+
+  metricsChannel.publish(payload);
+}
+
 export default {
   count,
   gauge,
   histogram,
+  distribution,
 }
