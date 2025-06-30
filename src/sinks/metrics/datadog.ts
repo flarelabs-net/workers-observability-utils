@@ -40,15 +40,21 @@ export class DatadogMetricSink implements MetricSink {
 
   constructor(options?: DatadogMetricSinkOptions) {
     // @ts-ignore
-    let apiKey = options?.apiKey || env.DD_API_KEY || env.DATADOG_API_KEY;
+    const apiKey = options?.apiKey || env.DD_API_KEY || env.DATADOG_API_KEY;
     if (!apiKey || apiKey.length === 0) {
-      console.error("Datadog API key was not found. Provide it in the sink options or set the DD_API_KEY environment variable. Metrics will not be sent to Datadog.");
+      console.error(
+        "Datadog API key was not found. Provide it in the sink options or set the DD_API_KEY environment variable. Metrics will not be sent to Datadog."
+      );
     }
 
     // @ts-ignore
     const site = options?.site || env.DD_SITE || "datadoghq.com";
-    const distributionPointsEndpoint = options?.distributionPointsEndpoint || `https://api.${site}/${DISTRIBUTION_POINTS_ENDPOINT_PATH}`;
-    const metricsSeriesEndpoint = options?.metricsSeriesEndpoint || `https://api.${site}/${METRICS_SERIES_ENDPOINT_PATH}`;
+    const distributionPointsEndpoint =
+      options?.distributionPointsEndpoint ||
+      `https://api.${site}/${DISTRIBUTION_POINTS_ENDPOINT_PATH}`;
+    const metricsSeriesEndpoint =
+      options?.metricsSeriesEndpoint ||
+      `https://api.${site}/${METRICS_SERIES_ENDPOINT_PATH}`;
 
     this.options = {
       apiKey,
@@ -65,17 +71,25 @@ export class DatadogMetricSink implements MetricSink {
     if (!payloads || payloads.length === 0) {
       return;
     }
-    
+
     try {
       // Filter out worker metrics, since Datadog is currently getting this metrics through an integration
       // For now, Datadog only accepts custom metrics.
-      const payloadsWithoutWorkerMetrics = payloads.filter((payload) => !payload.name.startsWith('worker.'));
+      const payloadsWithoutWorkerMetrics = payloads.filter(
+        (payload) => !payload.name.startsWith("worker.")
+      );
 
-      const datadogMetrics = payloadsWithoutWorkerMetrics.map((payload) => this.transformMetric(payload));
+      const datadogMetrics = payloadsWithoutWorkerMetrics.map((payload) =>
+        this.transformMetric(payload)
+      );
 
       await this.sendToDatadog(datadogMetrics);
     } catch (error) {
-      throw new Error(`Failed to send metrics to Datadog: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to send metrics to Datadog: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     }
   }
 
@@ -84,17 +98,19 @@ export class DatadogMetricSink implements MetricSink {
    */
   private transformMetric(payload: ExportedMetricPayload): DatadogMetric {
     const tags = this.formatTags(payload.tags);
-    
+
     const metricType = payload.type;
-   
-    if(metricType === MetricType.HISTOGRAM) {
+
+    if (metricType === MetricType.HISTOGRAM) {
       return {
         metric: payload.name,
-        type: 'distribution',
-        points: payload.value.map((value) => [Math.floor(value.time / 1000), [value.value]]),
+        type: "distribution",
+        points: payload.value.map((value) => [
+          Math.floor(value.time / 1000),
+          [value.value],
+        ]),
         tags: tags,
-      }
-
+      };
     }
     return {
       metric: payload.name,
@@ -114,19 +130,12 @@ export class DatadogMetricSink implements MetricSink {
    * - `region:earth`
    */
   private formatTags(tags: Tags): string[] {
-    const {
-      scriptName,
-      executionModel,
-      versionId,
-      trigger,
-      ...customTags
-    } = tags;
-    
+    const { scriptName, executionModel, versionId, trigger, ...customTags } =
+      tags;
+
     const formattedTags = Object.entries(customTags)
       .filter(([_, value]) => value !== undefined && value !== null)
-      .map(
-        ([key, value]) => `${key}:${value}`,
-      );
+      .map(([key, value]) => `${key}:${value}`);
 
     if (scriptName != null) {
       formattedTags.push(`worker_script:${scriptName}`);
@@ -154,37 +163,55 @@ export class DatadogMetricSink implements MetricSink {
    */
   private async sendToDatadog(metrics: DatadogMetric[]): Promise<void> {
     if (!this.options.apiKey || this.options.apiKey.length === 0) {
-      console.warn(`Datadog API key was not found. Dropping ${metrics.length} metrics.`);
+      console.warn(
+        `Datadog API key was not found. Dropping ${metrics.length} metrics.`
+      );
       return;
     }
 
-    const distributionMetrics: DatadogMetric[] = metrics.filter((metric) => metric.type === 'distribution');
-    // Gauge metrics are sent as metrics series
-    const gaugeMetrics: DatadogMetric[] = metrics.filter((metric) => metric.type === 'gauge');
-    
-    if (distributionMetrics.length > 0) {
-      try {
-        await this.sendDistributionMetrics(distributionMetrics);
-      } catch (error) {
-        throw new Error(`Distribution metrics failed to send:\n ${error instanceof Error ? error.message : String(error)}`);
-      }
+    const distributionMetrics: DatadogMetric[] = metrics.filter(
+      (metric) => metric.type === "histogram"
+    );
+    // Other metrics are sent as metrics series
+    const otherMetrics: DatadogMetric[] = metrics.filter(
+      (metric) => metric.type !== "histogram"
+    );
+
+    const promises = [
+      distributionMetrics.length > 0 &&
+        this.sendDistributionMetrics(distributionMetrics),
+      otherMetrics.length > 0 && this.sendMetricsSeries(otherMetrics),
+    ].filter(Boolean);
+
+    if (promises.length === 0) {
+      return;
     }
 
-    if (gaugeMetrics.length > 0) {
-      try {
-        await this.sendMetricsSeries(gaugeMetrics);
-      } catch (error) {
-        throw new Error(`Gauge metrics failed to send:\n ${error instanceof Error ? error.message : String(error)}`);
-      }
+    try {
+      await Promise.all(promises);
+    } catch (error) {
+      throw new Error(
+        `Failed to send metrics to Datadog: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     }
   }
 
   private async sendMetricsSeries(metrics: DatadogMetric[]): Promise<void> {
-    this.postRequest(this.options.metricsSeriesEndpoint, JSON.stringify({ series: metrics }));
+    this.postRequest(
+      this.options.metricsSeriesEndpoint,
+      JSON.stringify({ series: metrics })
+    );
   }
 
-  private async sendDistributionMetrics(metrics: DatadogMetric[]): Promise<void> {
-    await this.postRequest(this.options.distributionPointsEndpoint, JSON.stringify({ series: metrics }));
+  private async sendDistributionMetrics(
+    metrics: DatadogMetric[]
+  ): Promise<void> {
+    await this.postRequest(
+      this.options.distributionPointsEndpoint,
+      JSON.stringify({ series: metrics })
+    );
   }
 
   private async postRequest(endpoint: string, body: string): Promise<void> {
@@ -213,4 +240,3 @@ interface DatadogMetric {
   points: DatadogPoint[];
   tags: string[];
 }
-
