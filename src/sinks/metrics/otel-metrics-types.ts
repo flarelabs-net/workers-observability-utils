@@ -32,12 +32,36 @@ export interface Sum {
   isMonotonic: boolean;
 }
 
+export interface ExponentialHistogramDataPoint {
+  attributes: KeyValue[];
+  timeUnixNano: string;
+  startTimeUnixNano?: string;
+  count: string;
+  sum?: number;
+  scale: number;
+  zeroCount: string;
+  positive?: {
+    offset: number;
+    bucketCounts: string[];
+  };
+  negative?: {
+    offset: number;
+    bucketCounts: string[];
+  };
+}
+
+export interface ExponentialHistogram {
+  dataPoints: ExponentialHistogramDataPoint[];
+  aggregationTemporality: AggregationTemporality;
+}
+
 export interface Metric {
   name: string;
   description?: string;
   unit?: string;
   gauge?: Gauge;
   sum?: Sum;
+  exponentialHistogram?: ExponentialHistogram;
 }
 
 export interface InstrumentationScope {
@@ -72,4 +96,10 @@ export function isGaugeMetric(
 
 export function isSumMetric(metric: Metric): metric is Metric & { sum: Sum } {
   return metric.sum !== undefined;
+}
+
+export function isExponentialHistogramMetric(
+  metric: Metric,
+): metric is Metric & { exponentialHistogram: ExponentialHistogram } {
+  return metric.exponentialHistogram !== undefined;
 }

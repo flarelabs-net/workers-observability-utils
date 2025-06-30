@@ -44,13 +44,15 @@ export class OtelMetricSink implements MetricSink {
       await this.exportMetrics(otlpPayload);
     } catch (error) {
       throw new Error(
-        `Failed to send metrics to OTEL collector: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to send metrics to OTEL collector: ${
+          error instanceof Error ? error.message : String(error)
+        }`
       );
     }
   }
 
   private buildOTLPPayload(
-    metrics: ExportedMetricPayload[],
+    metrics: ExportedMetricPayload[]
   ): OTLPMetricsPayload {
     const otlpMetrics: (ResourceMetrics | undefined)[] = metrics.map(
       (payload) => {
@@ -93,7 +95,7 @@ export class OtelMetricSink implements MetricSink {
           scopeMetrics: [scopeMetrics],
         };
         return resourceMetrics;
-      },
+      }
     );
 
     return {
@@ -117,13 +119,13 @@ export class OtelMetricSink implements MetricSink {
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(
-        `HTTP ${response.status} ${response.statusText}: ${errorText}`,
+        `HTTP ${response.status} ${response.statusText}: ${errorText}`
       );
     }
   }
 
   private convertTagsToAttributes(
-    tags?: Record<string, string | number | boolean | undefined | null>,
+    tags?: Record<string, string | number | boolean | undefined | null>
   ): KeyValue[] {
     return Object.entries(tags || {})
       .filter(([_, value]) => value !== undefined && value !== null)
@@ -137,8 +139,23 @@ export class OtelMetricSink implements MetricSink {
 
   private payloadToMetric(
     payload: ExportedMetricPayload,
-    attributes: KeyValue[],
+    attributes: KeyValue[]
   ) {
+    if (payload.type === MetricType.HISTOGRAM) {
+      return {
+        name: payload.name,
+        exponentialHistogram: {
+          dataPoints: [
+            this.buildExponentialHistogramDataPoint(
+              payload.value,
+              attributes
+            ),
+          ],
+          aggregationTemporality:
+            AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA,
+        },
+      };
+    }
     const timeUnixNano = this.timestampToNanos(payload.timestamp);
     if (payload.type === MetricType.COUNT) {
       return {
@@ -171,6 +188,72 @@ export class OtelMetricSink implements MetricSink {
         },
       };
     }
+  }
+
+  private buildExponentialHistogramDataPoint(
+    values: { time: number; value: number }[],
+    attributes: KeyValue[]
+  ) {
+    // Sort values to calculate buckets
+    const sortedValues = values.map((v) => v.value).sort((a, b) => a - b);
+    const count = String(sortedValues.length);
+    const sum = sortedValues.reduce((acc, val) => acc + val, 0);
+
+    // Use scale 0 for simplicity (base-2 exponential buckets)
+    const scale = 0;
+    const zeroCount = String(sortedValues.filter((v) => v === 0).length);
+
+    // Build positive buckets for exponential histogram
+    const positive = this.buildExponentialBuckets(
+      sortedValues.filter((v) => v > 0)
+    );
+    const negative = this.buildExponentialBuckets(
+      sortedValues.filter((v) => v < 0).map((v) => Math.abs(v))
+    );
+
+    return {
+      attributes,
+      count,
+      startTimeUnixNano: this.timestampToNanos(
+        values.length > 0 ? values[0].time : Date.now()
+      ),
+      timeUnixNano: this.timestampToNanos(
+        values.length > 0 ? values[values.length - 1].time : Date.now()
+      ),
+      sum,
+      scale,
+      zeroCount,
+      ...(positive.bucketCounts.length > 0 && { positive }),
+      ...(negative.bucketCounts.length > 0 && { negative }),
+    };
+  }
+
+  private buildExponentialBuckets(values: number[]) {
+    if (values.length === 0) {
+      return { offset: 0, bucketCounts: [] };
+    }
+
+    // For scale 0, bucket boundaries are powers of 2: [1, 2), [2, 4), [4, 8), etc.
+    const buckets = new Map<number, number>();
+
+    for (const value of values) {
+      // Calculate bucket index for scale 0: floor(log2(value))
+      const bucketIndex = value <= 0 ? 0 : Math.floor(Math.log2(value));
+      buckets.set(bucketIndex, (buckets.get(bucketIndex) || 0) + 1);
+    }
+
+    const minBucket = Math.min(...buckets.keys());
+    const maxBucket = Math.max(...buckets.keys());
+    const bucketCounts: string[] = [];
+
+    for (let i = minBucket; i <= maxBucket; i++) {
+      bucketCounts.push(String(buckets.get(i) || 0));
+    }
+
+    return {
+      offset: minBucket,
+      bucketCounts,
+    };
   }
 
   private timestampToNanos(timestampMs: number): string {
