@@ -1,11 +1,9 @@
-import { calculateHistogramValue, calculatePercentile } from "./utils/maths";
 import {
-  type HistogramAggregates,
   type MetricPayload,
   type ExportedMetricPayload,
   MetricType,
   type Tags,
-  EmittedMetricPayload,
+  type EmittedMetricPayload,
 } from "./types";
 
 interface BaseStoredMetric {

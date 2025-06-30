@@ -64,12 +64,7 @@ describe("metrics", () => {
 
   describe("histogram", () => {
     it("should publish histogram metric with options and tags", () => {
-      const options = {
-        aggregates: ["max", "min", "avg"] as HistogramOptions["aggregates"],
-        percentiles: [0.5, 0.95, 0.99],
-      };
-
-      metrics.histogram("test.histogram", 150, options, { endpoint: "/api/users" });
+      metrics.histogram("test.histogram", 150, { endpoint: "/api/users" });
 
       expect(receivedMessages).toHaveLength(1);
       expect(receivedMessages[0]).toEqual({
@@ -77,7 +72,6 @@ describe("metrics", () => {
         name: "test.histogram",
         value: 150,
         tags: { endpoint: "/api/users" },
-        options,
       });
     });
   });

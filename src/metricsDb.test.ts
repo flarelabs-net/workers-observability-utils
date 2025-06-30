@@ -1,10 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { MetricsDb } from "./metricsDb";
 import {
-  EmittedMetricPayload,
+  type EmittedMetricPayload,
   MetricType,
-  type ExportedMetricPayload,
-  type HistogramAggregates,
 } from "./types";
 
 describe("MetricsDb", () => {

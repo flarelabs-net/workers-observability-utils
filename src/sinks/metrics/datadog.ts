@@ -46,9 +46,9 @@ export class DatadogMetricSink implements MetricSink {
     }
 
     // @ts-ignore
-    let site = options?.site || env.DD_SITE || "datadoghq.com";
-    let distributionPointsEndpoint = options?.distributionPointsEndpoint || `https://api.${site}/${DISTRIBUTION_POINTS_ENDPOINT_PATH}`;
-    let metricsSeriesEndpoint = options?.metricsSeriesEndpoint || `https://api.${site}/${METRICS_SERIES_ENDPOINT_PATH}`;
+    const site = options?.site || env.DD_SITE || "datadoghq.com";
+    const distributionPointsEndpoint = options?.distributionPointsEndpoint || `https://api.${site}/${DISTRIBUTION_POINTS_ENDPOINT_PATH}`;
+    const metricsSeriesEndpoint = options?.metricsSeriesEndpoint || `https://api.${site}/${METRICS_SERIES_ENDPOINT_PATH}`;
 
     this.options = {
       apiKey,
@@ -85,31 +85,23 @@ export class DatadogMetricSink implements MetricSink {
   private transformMetric(payload: ExportedMetricPayload): DatadogMetric {
     const tags = this.formatTags(payload.tags);
     
-    let type;
-    let value: number | number[];
-    switch (payload.type) {
-      case MetricType.GAUGE:
-        type = 'gauge';
-        value = payload.value;
-        break;
-      case MetricType.DISTRIBUTION:
-      // In Serverless, count and histogram metrics need to be sent as distribution metrics.
-      // Distributions metrics are stateless by design, no local aggregation is needed.
-      case MetricType.HISTOGRAM:
-      case MetricType.COUNT:
-        type = 'distribution';
-        value = [payload.value];
-        break;
-      default:
-        throw new Error(`Unsupported metric type: ${payload}`);
-    }
+    const metricType = payload.type;
+   
+    if(metricType === MetricType.HISTOGRAM) {
+      return {
+        metric: payload.name,
+        type: 'distribution',
+        points: payload.value.map((value) => [Math.floor(value.time / 1000), [value.value]]),
+        tags: tags,
+      }
 
+    }
     return {
       metric: payload.name,
-      type,
-      points: [[Math.floor(payload.timestamp / 1000), value]],
-      tags,
-    } as DatadogMetric;
+      type: metricType.toLowerCase(),
+      points: [[Math.floor(payload.timestamp / 1000), payload.value]],
+      tags: tags,
+    };
   }
 
   /**
@@ -130,7 +122,7 @@ export class DatadogMetricSink implements MetricSink {
       ...customTags
     } = tags;
     
-    let formattedTags = Object.entries(customTags)
+    const formattedTags = Object.entries(customTags)
       .filter(([_, value]) => value !== undefined && value !== null)
       .map(
         ([key, value]) => `${key}:${value}`,
@@ -152,7 +144,7 @@ export class DatadogMetricSink implements MetricSink {
       formattedTags.push(`trigger:${trigger}`);
     }
 
-    formattedTags.push(`region:earth`);
+    formattedTags.push("region:earth");
 
     return formattedTags;
   }
