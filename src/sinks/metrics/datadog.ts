@@ -82,29 +82,34 @@ export class DatadogMetricSink implements MetricSink {
   /**
    * Transform a metric payload to Datadog format
    */
-  private transformMetric(payload: ExportedMetricPayload): DatadogMetric | DatadogPoint {
+  private transformMetric(payload: ExportedMetricPayload): DatadogMetric {
     const tags = this.formatTags(payload.tags);
+    
+    let type;
+    let value: number | number[];
     switch (payload.type) {
       case MetricType.GAUGE:
-        return {
-          metric: payload.name,
-          type: 'gauge',
-          points: [[Math.floor(payload.timestamp / 1000), payload.value]],
-          tags,
-        } as DatadogMetric;
+        type = 'gauge';
+        value = payload.value;
+        break;
       case MetricType.DISTRIBUTION:
       // In Serverless, count and histogram metrics need to be sent as distribution metrics.
       // Distributions metrics are stateless by design, no local aggregation is needed.
       case MetricType.HISTOGRAM:
       case MetricType.COUNT:
+        type = 'distribution';
+        value = [payload.value];
+        break;
       default:
-        return {
-          metric: payload.name,
-          type: 'distribution',
-          points: [[Math.floor(payload.timestamp / 1000), [payload.value]]],
-          tags,
-        } as DatadogPoint;
+        throw new Error(`Unsupported metric type: ${payload}`);
     }
+
+    return {
+      metric: payload.name,
+      type,
+      points: [[Math.floor(payload.timestamp / 1000), value]],
+      tags,
+    } as DatadogMetric;
   }
 
   /**
@@ -155,15 +160,15 @@ export class DatadogMetricSink implements MetricSink {
   /**
    * Send metrics to Datadog API
    */
-  private async sendToDatadog(metrics: (DatadogMetric | DatadogPoint)[]): Promise<void> {
+  private async sendToDatadog(metrics: DatadogMetric[]): Promise<void> {
     if (!this.options.apiKey || this.options.apiKey.length === 0) {
       console.warn(`Datadog API key was not found. Dropping ${metrics.length} metrics.`);
       return;
     }
 
-    const distributionMetrics: DatadogPoint[] = metrics.filter((metric) => metric.type === 'distribution') as DatadogPoint[];
+    const distributionMetrics: DatadogMetric[] = metrics.filter((metric) => metric.type === 'distribution');
     // Gauge metrics are sent as metrics series
-    const gaugeMetrics: DatadogMetric[] = metrics.filter((metric) => metric.type === 'gauge') as DatadogMetric[];
+    const gaugeMetrics: DatadogMetric[] = metrics.filter((metric) => metric.type === 'gauge');
     
     if (distributionMetrics.length > 0) {
       try {
@@ -186,7 +191,7 @@ export class DatadogMetricSink implements MetricSink {
     this.postRequest(this.options.metricsSeriesEndpoint, JSON.stringify({ series: metrics }));
   }
 
-  private async sendDistributionMetrics(metrics: DatadogPoint[]): Promise<void> {
+  private async sendDistributionMetrics(metrics: DatadogMetric[]): Promise<void> {
     await this.postRequest(this.options.distributionPointsEndpoint, JSON.stringify({ series: metrics }));
   }
 
@@ -208,16 +213,12 @@ export class DatadogMetricSink implements MetricSink {
   }
 }
 
+type DatadogPoint = [number, number[]] | [number, number]; // [timestamp, [values]] (distribution) or [timestamp, value] (count, histogram, gauge)
+
 interface DatadogMetric {
   metric: string;
   type: string;
-  points: [number, number][]; // [timestamp, value]
+  points: DatadogPoint[];
   tags: string[];
 }
 
-interface DatadogPoint {
-  metric: string;
-  type: string;
-  points: [number, number[]][]; // [timestamp, [values]]
-  tags: string[];
-}
