@@ -4,6 +4,7 @@ export enum MetricType {
   COUNT = "COUNT",
   GAUGE = "GAUGE",
   HISTOGRAM = "HISTOGRAM",
+  DISTRIBUTION = "DISTRIBUTION",
 }
 
 export type Tags = Record<string, string | number | boolean | undefined | null>;
@@ -46,10 +47,16 @@ export interface HistogramMetricPayload extends BaseMetricPayload {
   value: number;
 }
 
+export interface DistributionMetricPayload extends BaseMetricPayload {
+  type: MetricType.DISTRIBUTION;
+  value: number;
+}
+
 export type MetricPayload =
   | CountMetricPayload
   | GaugeMetricPayload
-  | HistogramMetricPayload;
+  | HistogramMetricPayload
+  | DistributionMetricPayload;
 
 export type EmittedMetricPayload = MetricPayload & { timestamp: number };
 
