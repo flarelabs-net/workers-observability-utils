@@ -5,6 +5,7 @@ import {
   type ExportedMetricPayload,
   MetricType,
   type Tags,
+  EmittedMetricPayload,
 } from "./types";
 
 interface BaseStoredMetric {
@@ -25,9 +26,10 @@ interface StoredGaugeMetric extends BaseStoredMetric {
 
 interface StoredHistogramMetric extends BaseStoredMetric {
   type: MetricType.HISTOGRAM;
-  value: number[];
-  percentiles?: number[];
-  aggregates?: HistogramAggregates[];
+  value: {
+    time: number;
+    value: number;
+  }[];
 }
 
 type StoredMetric =
@@ -49,7 +51,7 @@ export class MetricsDb {
     return `${metric.name}:${metric.type}:${tagKey}`;
   }
 
-  public storeMetric(metric: ExportedMetricPayload): void {
+  public storeMetric(metric: EmittedMetricPayload): void {
     const key = this.getMetricKey(metric);
     const existingMetric = this.metrics.get(key);
 
@@ -82,15 +84,20 @@ export class MetricsDb {
 
       case MetricType.HISTOGRAM: {
         const existingValue = existingMetric
-          ? (existingMetric.value as number[])
+          ? (existingMetric.value as { value: number; time: number }[])
           : [];
         this.metrics.set(key, {
           type: metric.type,
           name: metric.name,
           tags: metric.tags,
-          percentiles: metric.options?.percentiles,
-          aggregates: metric.options?.aggregates,
-          value: [...existingValue, metric.value],
+
+          value: [
+            ...existingValue,
+            {
+              value: Number(metric.value),
+              time: metric.timestamp,
+            },
+          ],
           lastUpdated: metric.timestamp,
         });
       }
@@ -98,7 +105,7 @@ export class MetricsDb {
   }
 
   public storeMetrics(
-    metrics: (MetricPayload & { timestamp: number })[],
+    metrics: (MetricPayload & { timestamp: number })[]
   ): void {
     for (const metric of metrics) {
       this.storeMetric(metric);
@@ -140,30 +147,13 @@ export class MetricsDb {
           });
           break;
         case MetricType.HISTOGRAM: {
-          const sortedArray = [...metric.value].sort();
-
-          for (const percentile of metric.percentiles || []) {
-            const value = calculatePercentile(sortedArray, percentile);
-            payloads.push({
-              type: MetricType.GAUGE,
-              name: `${metric.name}.p${Math.round(percentile * 100)}`,
-              value: value,
-              tags: metric.tags,
-              timestamp: metric.lastUpdated,
-            });
-          }
-
-          for (const aggregate of metric.aggregates || []) {
-            const value = calculateHistogramValue(aggregate, metric.value);
-
-            payloads.push({
-              type: aggregate === "count" ? MetricType.COUNT : MetricType.GAUGE,
-              name: `${metric.name}.${aggregate}`,
-              value: value,
-              tags: metric.tags,
-              timestamp: metric.lastUpdated,
-            });
-          }
+          payloads.push({
+            type: MetricType.HISTOGRAM,
+            name: metric.name,
+            value: metric.value,
+            tags: metric.tags,
+          });
+          break;
         }
       }
     }

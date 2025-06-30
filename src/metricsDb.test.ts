@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { MetricsDb } from "./metricsDb";
 import {
+  EmittedMetricPayload,
   MetricType,
   type ExportedMetricPayload,
   type HistogramAggregates,
@@ -65,16 +66,12 @@ describe("MetricsDb", () => {
     });
 
     it("should store a histogram metric", () => {
-      const metric: ExportedMetricPayload = {
+      const metric: EmittedMetricPayload = {
         type: MetricType.HISTOGRAM,
         name: "test.histogram",
         value: 150,
         tags: { endpoint: "/api/users" },
         timestamp: Date.now(),
-        options: {
-          percentiles: [0.5, 0.95],
-          aggregates: ["max", "min"] as HistogramAggregates[],
-        },
       };
 
       metricsDb.storeMetric(metric);
@@ -84,10 +81,8 @@ describe("MetricsDb", () => {
       expect(metrics[0]).toEqual({
         type: MetricType.HISTOGRAM,
         name: "test.histogram",
-        value: [150],
+        value: [{ value: 150, time: metric.timestamp }],
         tags: { endpoint: "/api/users" },
-        percentiles: [0.5, 0.95],
-        aggregates: ["max", "min"],
         lastUpdated: metric.timestamp,
       });
     });
@@ -97,10 +92,6 @@ describe("MetricsDb", () => {
         type: MetricType.HISTOGRAM,
         name: "test.histogram",
         tags: { endpoint: "/api/users" },
-        options: {
-          percentiles: [0.5],
-          aggregates: ["max"] as HistogramAggregates[],
-        },
       };
 
       metricsDb.storeMetric({
@@ -117,8 +108,7 @@ describe("MetricsDb", () => {
 
       expect(metricsDb.getMetricCount()).toBe(1);
       const metrics = metricsDb.getAllMetrics();
-      expect(metrics[0].value).toEqual([100, 200]);
-      expect(metrics[0].lastUpdated).toBe(2000);
+      expect(metrics[0].value).toEqual([{ value: 100, time: 1000 }, { value: 200, time: 2000 }]);
     });
 
     it("should group metric keys based on name, type, and tags", () => {
@@ -237,10 +227,7 @@ describe("MetricsDb", () => {
         name: "test.histogram",
         value: 100,
         tags: { endpoint: "/api" },
-        timestamp: 1000,
-        options: {
-          percentiles: [0.5, 0.95],
-        },
+        timestamp: 1000
       });
 
       metricsDb.storeMetric({
@@ -248,122 +235,23 @@ describe("MetricsDb", () => {
         name: "test.histogram",
         value: 200,
         tags: { endpoint: "/api" },
-        timestamp: 2000,
-        options: {
-          percentiles: [0.5, 0.95],
-        },
+        timestamp: 2000
       });
 
       const payloads = metricsDb.toMetricPayloads();
 
-      expect(payloads).toHaveLength(2);
-      expect(payloads).toContainEqual({
-        type: MetricType.GAUGE,
-        name: "test.histogram.p50",
-        value: 100, // 50th percentile of [100, 200]
-        tags: { endpoint: "/api" },
-        timestamp: 2000,
-      });
-      expect(payloads).toContainEqual({
-        type: MetricType.GAUGE,
-        name: "test.histogram.p95",
-        value: 200, // 95th percentile of [100, 200]
-        tags: { endpoint: "/api" },
-        timestamp: 2000,
-      });
-    });
-
-    it("should export histogram aggregates as appropriate metric types", () => {
-      metricsDb.storeMetric({
+      expect(payloads).toHaveLength(1);
+      expect(payloads[0]).toEqual({
         type: MetricType.HISTOGRAM,
         name: "test.histogram",
-        value: 100,
+        value: [{
+          value: 100,
+          time: 1000,
+        }, {
+          value: 200,
+          time: 2000,
+        }],
         tags: { endpoint: "/api" },
-        timestamp: 1000,
-        options: {
-          aggregates: ["count", "max", "min", "avg"] as HistogramAggregates[],
-        },
-      });
-
-      metricsDb.storeMetric({
-        type: MetricType.HISTOGRAM,
-        name: "test.histogram",
-        value: 200,
-        tags: { endpoint: "/api" },
-        timestamp: 2000,
-        options: {
-          aggregates: ["count", "max", "min", "avg"] as HistogramAggregates[],
-        },
-      });
-
-      const payloads = metricsDb.toMetricPayloads();
-
-      expect(payloads).toHaveLength(4);
-
-      // Count should be COUNT type
-      expect(payloads).toContainEqual({
-        type: MetricType.COUNT,
-        name: "test.histogram.count",
-        value: 2,
-        tags: { endpoint: "/api" },
-        timestamp: 2000,
-      });
-
-      // Other aggregates should be GAUGE type
-      expect(payloads).toContainEqual({
-        type: MetricType.GAUGE,
-        name: "test.histogram.max",
-        value: 200,
-        tags: { endpoint: "/api" },
-        timestamp: 2000,
-      });
-
-      expect(payloads).toContainEqual({
-        type: MetricType.GAUGE,
-        name: "test.histogram.min",
-        value: 100,
-        tags: { endpoint: "/api" },
-        timestamp: 2000,
-      });
-
-      expect(payloads).toContainEqual({
-        type: MetricType.GAUGE,
-        name: "test.histogram.avg",
-        value: 150,
-        tags: { endpoint: "/api" },
-        timestamp: 2000,
-      });
-    });
-
-    it("should handle histogram with both percentiles and aggregates", () => {
-      metricsDb.storeMetric({
-        type: MetricType.HISTOGRAM,
-        name: "test.histogram",
-        value: 100,
-        tags: { endpoint: "/api" },
-        timestamp: 1000,
-        options: {
-          percentiles: [0.5],
-          aggregates: ["count"] as HistogramAggregates[],
-        },
-      });
-
-      const payloads = metricsDb.toMetricPayloads();
-
-      expect(payloads).toHaveLength(2);
-      expect(payloads).toContainEqual({
-        type: MetricType.GAUGE,
-        name: "test.histogram.p50",
-        value: 100,
-        tags: { endpoint: "/api" },
-        timestamp: 1000,
-      });
-      expect(payloads).toContainEqual({
-        type: MetricType.COUNT,
-        name: "test.histogram.count",
-        value: 1,
-        tags: { endpoint: "/api" },
-        timestamp: 1000,
       });
     });
 
@@ -372,14 +260,13 @@ describe("MetricsDb", () => {
         type: MetricType.HISTOGRAM,
         name: "test.histogram",
         value: 100,
-        options: {},
         tags: { endpoint: "/api" },
         timestamp: 1000,
       });
 
       const payloads = metricsDb.toMetricPayloads();
 
-      expect(payloads).toHaveLength(0);
+      expect(payloads).toHaveLength(1);
     });
   });
 

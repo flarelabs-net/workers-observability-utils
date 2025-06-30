@@ -11,7 +11,7 @@ export type Tags = Record<string, string | number | boolean | undefined | null>;
 interface BaseMetricPayload {
   type: MetricType;
   name: string;
-  value: number;
+  value: unknown;
   tags: Tags;
 }
 
@@ -44,7 +44,6 @@ export interface GaugeMetricPayload extends BaseMetricPayload {
 export interface HistogramMetricPayload extends BaseMetricPayload {
   type: MetricType.HISTOGRAM;
   value: number;
-  options: HistogramOptions;
 }
 
 export type MetricPayload =
@@ -52,4 +51,11 @@ export type MetricPayload =
   | GaugeMetricPayload
   | HistogramMetricPayload;
 
-export type ExportedMetricPayload = MetricPayload & { timestamp: number };
+export type EmittedMetricPayload = MetricPayload & { timestamp: number };
+
+export interface ExportedHistogramPayload extends BaseMetricPayload {
+  type: MetricType.HISTOGRAM;
+  value: { time: number, value: number }[];
+}
+
+export type ExportedMetricPayload = (CountMetricPayload | GaugeMetricPayload) & { timestamp: number } | ExportedHistogramPayload
