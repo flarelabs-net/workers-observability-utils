@@ -1,6 +1,6 @@
 {
   "name": "@flarelabs-net/workers-observability-utils",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "A collection of Utilities for Capturing Logs and Metrics from Cloudflare Workers",
   "type": "module",
   "publishConfig": {
