@@ -70,6 +70,7 @@ export class OtelMetricSink implements MetricSink {
             executionModel === "stateless" ? "Workers" : "Durable Objects",
           "cloud.region": "earth",
           "faas.name": scriptName,
+          "service.name": scriptName,
           "faas.trigger": trigger,
           "faas.version": versionId,
         });
