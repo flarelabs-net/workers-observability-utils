@@ -15,6 +15,14 @@ export interface OtelMetricSinkOptions {
   headers: Record<string, string>;
   scopeName?: string;
   scopeVersion?: string;
+  enableNanoSecondTimestampJitter?: boolean;
+  /**
+   * WARNING: Enabling this option significantly increases metrics cardinality!
+   * Each isolate will create separate metric series, which can lead to
+   * storage and performance issues in your metrics backend.
+   * Only enable if you need to track metrics per isolate instance.
+   */
+  enableIsolateId?: boolean;
 }
 
 export class OtelMetricSink implements MetricSink {
@@ -22,6 +30,7 @@ export class OtelMetricSink implements MetricSink {
     scopeName: string;
     scopeVersion: string;
   };
+  private isolateId?: string;
 
   constructor(options: OtelMetricSinkOptions) {
     this.options = {
@@ -29,6 +38,10 @@ export class OtelMetricSink implements MetricSink {
       scopeVersion: "0.3.0",
       ...options,
     };
+    
+    if (options.enableIsolateId) {
+      this.isolateId = Math.random().toString(36).substring(2, 15);
+    }
   }
 
   async sendMetrics(metrics: ExportedMetricPayload[]): Promise<void> {
@@ -73,6 +86,7 @@ export class OtelMetricSink implements MetricSink {
           "service.name": scriptName,
           "faas.trigger": trigger,
           "faas.version": versionId,
+          ...(this.isolateId ? { "faas.instance": this.isolateId } : {}),
         });
 
         const metric = this.payloadToMetric(payload, attributes);
@@ -176,6 +190,15 @@ export class OtelMetricSink implements MetricSink {
 
   private timestampToNanos(timestampMs: number): string {
     // Convert milliseconds to nanoseconds using BigInt to avoid precision loss
-    return String(BigInt(Math.round(timestampMs)) * BigInt(1000000));
+    const baseNanos = BigInt(Math.round(timestampMs)) * BigInt(1000000);
+    
+    if (this.options.enableNanoSecondTimestampJitter) {
+      // Add entropy to nanosecond precision while preserving millisecond accuracy
+      // Generate random nanoseconds between -499999 and +499999 to keep within same millisecond
+      const jitterNanos = BigInt(Math.floor(Math.random() * 1000000) - 500000);
+      return String(baseNanos + jitterNanos);
+    }
+    
+    return String(baseNanos);
   }
 }

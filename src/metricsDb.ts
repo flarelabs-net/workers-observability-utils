@@ -126,6 +126,7 @@ export class MetricsDb {
    */
   public toMetricPayloads(): ExportedMetricPayload[] {
     const payloads: ExportedMetricPayload[] = [];
+    const flushTimestamp = Date.now();
 
     for (const metric of this.metrics.values()) {
       switch (metric.type) {
@@ -136,7 +137,7 @@ export class MetricsDb {
             name: metric.name,
             value: metric.value as number,
             tags: metric.tags,
-            timestamp: metric.lastUpdated,
+            timestamp: flushTimestamp,
           });
           break;
         case MetricType.HISTOGRAM: {
@@ -149,7 +150,7 @@ export class MetricsDb {
               name: `${metric.name}.p${Math.round(percentile * 100)}`,
               value: value,
               tags: metric.tags,
-              timestamp: metric.lastUpdated,
+              timestamp: flushTimestamp,
             });
           }
 
@@ -161,7 +162,7 @@ export class MetricsDb {
               name: `${metric.name}.${aggregate}`,
               value: value,
               tags: metric.tags,
-              timestamp: metric.lastUpdated,
+              timestamp: flushTimestamp,
             });
           }
         }

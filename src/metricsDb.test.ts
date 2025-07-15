@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { MetricsDb } from "./metricsDb";
 import {
   MetricType,
@@ -11,6 +11,7 @@ describe("MetricsDb", () => {
 
   beforeEach(() => {
     metricsDb = new MetricsDb();
+    vi.useFakeTimers();
   });
 
   describe("storeMetric", () => {
@@ -195,7 +196,10 @@ describe("MetricsDb", () => {
   });
 
   describe("toMetricPayloads", () => {
-    it("should export count and gauge metrics unchanged", () => {
+    it("should export count and gauge metrics with flush timestamp", () => {
+      const mockFlushTime = 5000;
+      vi.setSystemTime(mockFlushTime);
+      
       metricsDb.storeMetric({
         type: MetricType.COUNT,
         name: "test.counter",
@@ -215,23 +219,27 @@ describe("MetricsDb", () => {
       const payloads = metricsDb.toMetricPayloads();
 
       expect(payloads).toHaveLength(2);
+      
       expect(payloads).toContainEqual({
         type: MetricType.COUNT,
         name: "test.counter",
         value: 5,
         tags: { service: "api" },
-        timestamp: 1000,
+        timestamp: mockFlushTime,
       });
       expect(payloads).toContainEqual({
         type: MetricType.GAUGE,
         name: "test.gauge",
         value: 100,
         tags: { region: "us-east-1" },
-        timestamp: 2000,
+        timestamp: mockFlushTime,
       });
     });
 
     it("should export histogram percentiles as gauge metrics", () => {
+      const mockFlushTime = 5000;
+      vi.setSystemTime(mockFlushTime);
+      
       metricsDb.storeMetric({
         type: MetricType.HISTOGRAM,
         name: "test.histogram",
@@ -257,23 +265,27 @@ describe("MetricsDb", () => {
       const payloads = metricsDb.toMetricPayloads();
 
       expect(payloads).toHaveLength(2);
+      
       expect(payloads).toContainEqual({
         type: MetricType.GAUGE,
         name: "test.histogram.p50",
         value: 100, // 50th percentile of [100, 200]
         tags: { endpoint: "/api" },
-        timestamp: 2000,
+        timestamp: mockFlushTime,
       });
       expect(payloads).toContainEqual({
         type: MetricType.GAUGE,
         name: "test.histogram.p95",
         value: 200, // 95th percentile of [100, 200]
         tags: { endpoint: "/api" },
-        timestamp: 2000,
+        timestamp: mockFlushTime,
       });
     });
 
     it("should export histogram aggregates as appropriate metric types", () => {
+      const mockFlushTime = 5000;
+      vi.setSystemTime(mockFlushTime);
+      
       metricsDb.storeMetric({
         type: MetricType.HISTOGRAM,
         name: "test.histogram",
@@ -306,7 +318,7 @@ describe("MetricsDb", () => {
         name: "test.histogram.count",
         value: 2,
         tags: { endpoint: "/api" },
-        timestamp: 2000,
+        timestamp: mockFlushTime,
       });
 
       // Other aggregates should be GAUGE type
@@ -315,7 +327,7 @@ describe("MetricsDb", () => {
         name: "test.histogram.max",
         value: 200,
         tags: { endpoint: "/api" },
-        timestamp: 2000,
+        timestamp: mockFlushTime,
       });
 
       expect(payloads).toContainEqual({
@@ -323,7 +335,7 @@ describe("MetricsDb", () => {
         name: "test.histogram.min",
         value: 100,
         tags: { endpoint: "/api" },
-        timestamp: 2000,
+        timestamp: mockFlushTime,
       });
 
       expect(payloads).toContainEqual({
@@ -331,11 +343,14 @@ describe("MetricsDb", () => {
         name: "test.histogram.avg",
         value: 150,
         tags: { endpoint: "/api" },
-        timestamp: 2000,
+        timestamp: mockFlushTime,
       });
     });
 
     it("should handle histogram with both percentiles and aggregates", () => {
+      const mockFlushTime = 5000;
+      vi.setSystemTime(mockFlushTime);
+      
       metricsDb.storeMetric({
         type: MetricType.HISTOGRAM,
         name: "test.histogram",
@@ -351,19 +366,20 @@ describe("MetricsDb", () => {
       const payloads = metricsDb.toMetricPayloads();
 
       expect(payloads).toHaveLength(2);
+      
       expect(payloads).toContainEqual({
         type: MetricType.GAUGE,
         name: "test.histogram.p50",
         value: 100,
         tags: { endpoint: "/api" },
-        timestamp: 1000,
+        timestamp: mockFlushTime,
       });
       expect(payloads).toContainEqual({
         type: MetricType.COUNT,
         name: "test.histogram.count",
         value: 1,
         tags: { endpoint: "/api" },
-        timestamp: 1000,
+        timestamp: mockFlushTime,
       });
     });
 

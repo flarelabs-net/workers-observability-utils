@@ -27,9 +27,10 @@
   },
   "scripts": {
     "build": "tsc",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "pnpm run build",
     "test": "vitest",
-    "lint:fix": "biome lint --fix"
+    "lint:fix": "biome lint --fix",
+    "release": "release-it"
   },
   "keywords": [
     "cloudflare",
@@ -44,11 +45,15 @@
     "@cloudflare/vitest-pool-workers": "^0.8.32",
     "@cloudflare/workers-types": "^4.20250519.0",
     "@types/node": "^22.15.19",
+    "release-it": "^19.0.3",
     "typescript": "^5.2.2",
     "vitest": "^3.1.4"
   },
   "dependencies": {
     "flat": "^6.0.1",
     "ulid-workers": "^2.1.0"
+  },
+  "volta": {
+    "node": "24.4.0"
   }
 }

@@ -19,6 +19,8 @@ export default new TailExporter({
 					'x-honeycomb-team': env.HONEYCOMB_API_KEY,
 					'x-honeycomb-dataset': 'metrics',
 				},
+				enableNanoSecondTimestampJitter: true,
+				enableIsolateId: true,
 			}),
 		],
 		maxBufferSize: 10,
