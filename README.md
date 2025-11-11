@@ -162,6 +162,9 @@ export default new TailExporter({
 				headers: {
 					
 				},
+        defaultLogsEnabled: {
+          invocationLog: true;
+        };
 			}),
     ],
     maxBufferSize: 20,

@@ -19,6 +19,9 @@ export interface OtelLogSinkOptions {
   headers: Record<string, string>;
   scopeName?: string;
   scopeVersion?: string;
+  defaultLogsEnabled: {
+    invocationLog: boolean;
+  };
 }
 
 const ulid = ulidFactory();
@@ -34,6 +37,9 @@ export class OtelLogSink implements LogSink {
       scopeName: "workers-observability-utils",
       scopeVersion: "0.3.0",
       ...options,
+      defaultLogsEnabled: {
+        invocationLog: options.defaultLogsEnabled?.invocationLog !== false,
+      }
     };
   }
 
@@ -78,28 +84,30 @@ export class OtelLogSink implements LogSink {
 
       const logRecords: LogRecord[] = [];
 
-      // Add invocation log
-      const invocationLog: LogRecord = {
-        timeUnixNano: this.timestampToNanos(event.eventTimestamp || Date.now()),
-        severityNumber: SeverityNumber.SEVERITY_NUMBER_INFO,
-        severityText: "INFO",
-        body: {
-          stringValue: this.eventToMessage(event),
-        },
-        attributes: this.convertTagsToAttributes({
-          ...flatten({ event: event.event }),
-          cpuTimeMs: event.cpuTime || 0,
-          wallTimeMs: event.wallTime || 0,
-          scriptVersion: event.scriptVersion?.id || "unknown",
-          scriptName: event.scriptName || "unknown",
-          executionModel: event.executionModel || "unknown",
-          outcome: event.outcome,
-          entrypoint: event.entrypoint || "default",
-          request_id: requestId,
-          log_type: "invocation",
-        }),
-      };
-      logRecords.push(invocationLog);
+      if (this.options.defaultLogsEnabled.invocationLog) {
+        // Add invocation log
+        const invocationLog: LogRecord = {
+          timeUnixNano: this.timestampToNanos(event.eventTimestamp || Date.now()),
+          severityNumber: SeverityNumber.SEVERITY_NUMBER_INFO,
+          severityText: "INFO",
+          body: {
+            stringValue: this.eventToMessage(event),
+          },
+          attributes: this.convertTagsToAttributes({
+            ...flatten({ event: event.event }),
+            cpuTimeMs: event.cpuTime || 0,
+            wallTimeMs: event.wallTime || 0,
+            scriptVersion: event.scriptVersion?.id || "unknown",
+            scriptName: event.scriptName || "unknown",
+            executionModel: event.executionModel || "unknown",
+            outcome: event.outcome,
+            entrypoint: event.entrypoint || "default",
+            request_id: requestId,
+            log_type: "invocation",
+          }),
+        };
+        logRecords.push(invocationLog);
+      }
 
       // Add individual logs
       if (event.logs) {
