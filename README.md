@@ -173,6 +173,25 @@ export default new TailExporter({
 });
 ```
 
+### Default log
+
+The Tail Exporter can emit a small set of built-in logs per sink via the `defaultLogsEnabled` option (used by sinks such as `OtelLogSink`). The most common default log is:
+
+- `invocationLog` (default: `true`): emits a per-invocation log record containing metadata about the invocation (script name, execution model, outcome, versionId), timing information, and any global tags. This complements automatic `console` capture and is useful for tracing, auditing, and correlating metrics with individual invocations.
+
+To disable the invocation log for a sink, set:
+
+```ts
+new OtelLogSink({
+  ...
+  defaultLogsEnabled: {
+    invocationLog: false;
+  };
+}),
+```
+
+You can enable or disable default logs per sink when constructing the sink (see the `OtelLogSink` example above).
+
 2. Set up Datadog API key:
 
 ```bash
@@ -243,3 +262,5 @@ export default new TailExporter({
   }
 });
 ```
+
+
