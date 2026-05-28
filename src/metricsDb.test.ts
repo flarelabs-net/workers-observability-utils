@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { MetricsDb } from "./metricsDb.js";
+import { MetricsDb } from "./metricsDb";
 import {
   MetricType,
   type ExportedMetricPayload,
   type HistogramAggregates,
-} from "./types.js";
+} from "./types";
 
 describe("MetricsDb", () => {
   let metricsDb: MetricsDb;

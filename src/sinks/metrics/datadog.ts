@@ -1,7 +1,7 @@
-import type { ExportedMetricPayload } from "../../types.js";
-import { Logger, type LogLevel } from "../../logger.js";
+import type { ExportedMetricPayload } from "../../types";
+import { Logger, type LogLevel } from "../../logger";
 import { env } from "cloudflare:workers";
-import type { MetricSink } from "../sink.js";
+import type { MetricSink } from "../sink";
 export interface DatadogMetricSinkOptions {
   /**
    * Datadog API key

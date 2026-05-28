@@ -1,9 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { MetricsTail } from "./metricsTail.js";
-import type { MetricSink } from "./sinks/sink.js";
-import type { MetricPayload } from "./types.js";
-import { MetricType, METRICS_CHANNEL_NAME } from "./types.js";
-import type { TraceItem } from "@cloudflare/workers-types";
+import { MetricsTail } from "./metricsTail";
+import type { MetricSink } from "./sinks/sink";
+import type { MetricPayload } from "./types";
+import { MetricType, METRICS_CHANNEL_NAME } from "./types";
 
 class TestSink implements MetricSink {
   receivedMetrics: MetricPayload[] = [];

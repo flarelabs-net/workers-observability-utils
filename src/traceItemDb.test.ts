@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { TraceItemDb } from "./traceItem.js";
-import type { TraceItem } from "@cloudflare/workers-types";
+import { TraceItemDb } from "./traceItem";
 
 describe("TraceItemDb", () => {
   let traceItemDb: TraceItemDb;

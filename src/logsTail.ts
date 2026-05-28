@@ -1,7 +1,6 @@
-import type { TraceItem } from "@cloudflare/workers-types";
-import { Logger, type LogLevel } from "./logger.js";
-import type { LogSink } from "./sinks/sink.js";
-import { TraceItemDb } from "./traceItem.js";
+import { Logger, type LogLevel } from "./logger";
+import type { LogSink } from "./sinks/sink";
+import { TraceItemDb } from "./traceItem";
 
 export interface LogTailOptions {
   sinks: LogSink[];

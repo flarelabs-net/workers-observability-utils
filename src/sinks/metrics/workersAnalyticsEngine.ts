@@ -1,5 +1,5 @@
-import type { ExportedMetricPayload } from "../../types.js";
-import type { MetricSink } from "../sink.js";
+import type { ExportedMetricPayload } from "../../types";
+import type { MetricSink } from "../sink";
 
 export interface WAEMetricSinkOptions {
   /**

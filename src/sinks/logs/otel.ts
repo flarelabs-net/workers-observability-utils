@@ -1,8 +1,3 @@
-import type {
-  TraceItem,
-  TraceItemTailEventInfo,
-} from "@cloudflare/workers-types";
-
 import {
   type KeyValue,
   type LogRecord,
@@ -10,9 +5,9 @@ import {
   type ResourceLogs,
   type ScopeLogs,
   SeverityNumber,
-} from "./otel-logs-types.js";
+} from "./otel-logs-types";
 import { ulidFactory } from "ulid-workers";
-import type { LogSink } from "../sink.js";
+import type { LogSink } from "../sink";
 import { flatten } from "flat";
 export interface OtelLogSinkOptions {
   url: string;

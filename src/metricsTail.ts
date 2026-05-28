@@ -1,9 +1,8 @@
-import { METRICS_CHANNEL_NAME, type MetricPayload, MetricType } from "./types.js";
-import { MetricsDb } from "./metricsDb.js";
-import type { TraceItem } from "@cloudflare/workers-types";
-import { Logger, type LogLevel } from "./logger.js";
-import type { MetricSink } from "./sinks/sink.js";
-import { getEventTrigger } from "./utils/cloudflare.js";
+import { METRICS_CHANNEL_NAME, type MetricPayload, MetricType } from "./types";
+import { MetricsDb } from "./metricsDb";
+import { Logger, type LogLevel } from "./logger";
+import type { MetricSink } from "./sinks/sink";
+import { getEventTrigger } from "./utils/cloudflare";
 
 export interface MetricTailOptions {
   sinks: MetricSink[];
