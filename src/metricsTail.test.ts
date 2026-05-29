@@ -3,7 +3,6 @@ import { MetricsTail } from "./metricsTail";
 import type { MetricSink } from "./sinks/sink";
 import type { MetricPayload } from "./types";
 import { MetricType, METRICS_CHANNEL_NAME } from "./types";
-import type { TraceItem } from "@cloudflare/workers-types";
 
 class TestSink implements MetricSink {
   receivedMetrics: MetricPayload[] = [];

@@ -1,8 +1,3 @@
-import type {
-  TraceItem,
-  TraceItemTailEventInfo,
-} from "@cloudflare/workers-types";
-
 import {
   type KeyValue,
   type LogRecord,

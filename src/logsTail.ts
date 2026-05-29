@@ -1,4 +1,4 @@
-import type { TraceItem } from "@cloudflare/workers-types";
+import { Logger, type LogLevel } from "./logger";
 import type { LogSink } from "./sinks/sink";
 import { TraceItemDb } from "./traceItem";
 
@@ -14,6 +14,11 @@ export interface LogTailOptions {
    * Default: 5 Seconds
    */
   maxBufferDuration?: number;
+  /**
+   * Log level for internal operational messages.
+   * Default: "warn"
+   */
+  logLevel?: LogLevel;
 }
 
 export class LogsTail {
@@ -23,11 +28,13 @@ export class LogsTail {
   #flushId = 0;
   #traceItems = new TraceItemDb();
   #flushScheduled = false;
+  #logger: Logger;
 
   constructor(options: LogTailOptions) {
     this.#logSinks = options.sinks;
     this.#maxBufferSize = options.maxBufferSize || 25;
     this.#maxBufferDuration = Math.min(options.maxBufferDuration || 5, 30);
+    this.#logger = new Logger(options.logLevel);
   }
 
   processTraceItems(traceItems: TraceItem[], ctx: ExecutionContext): void {
@@ -86,7 +93,7 @@ export class LogsTail {
       );
       const successfulSinks = results.filter((el) => el.status === "fulfilled") as PromiseFulfilledResult<void>[];
       if (successfulSinks.length > 0) {
-        console.debug(`Flushed ${items.length} logs to ${successfulSinks.length} sink(s) successfully.`, {
+        this.#logger.debug(`Flushed ${items.length} logs to ${successfulSinks.length} sink(s) successfully.`, {
           logs: items.length,
           sinks: successfulSinks.length,
         });
@@ -96,14 +103,14 @@ export class LogsTail {
         const sinkErrors = errors.map((error) => {
           return `${error.reason instanceof Error ? error.reason.message : String(error.reason)}`;
         });
-        console.error(`Failed to flush logs to ${errors.length} sink(s): ${sinkErrors.join(', ')}`, {
+        this.#logger.error(`Failed to flush logs to ${errors.length} sink(s): ${sinkErrors.join(', ')}`, {
           logs: items.length,
           sinks: errors.length,
           errors: sinkErrors,
         });
       }
     } catch (error) {
-      console.error("Error flushing logs batch:", error);
+      this.#logger.error("Error flushing logs batch:", error);
     }
   }
 }

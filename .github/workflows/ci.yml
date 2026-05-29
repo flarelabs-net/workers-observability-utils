@@ -28,9 +28,15 @@ jobs:
         
       - name: Run tests
         run: pnpm test
-        
-      - name: Run typecheck
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
         run: pnpm build
-        
-      - name: Run lint
+
+      - name: Lint package.json (publint)
+        run: pnpm check:publint
+
+      - name: Lint
         run: pnpm lint:fix

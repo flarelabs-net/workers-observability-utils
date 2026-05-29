@@ -1,6 +1,6 @@
 import { METRICS_CHANNEL_NAME, type MetricPayload, MetricType } from "./types";
 import { MetricsDb } from "./metricsDb";
-import type { TraceItem } from "@cloudflare/workers-types";
+import { Logger, type LogLevel } from "./logger";
 import type { MetricSink } from "./sinks/sink";
 import { getEventTrigger } from "./utils/cloudflare";
 
@@ -22,6 +22,11 @@ export interface MetricTailOptions {
    * Default: 5 Seconds
    */
   maxBufferDuration?: number;
+  /**
+   * Log level for internal operational messages.
+   * Default: "warn"
+   */
+  logLevel?: LogLevel;
 }
 
 export class MetricsTail {
@@ -31,6 +36,7 @@ export class MetricsTail {
   #flushId = 0;
   #metrics = new MetricsDb();
   #flushScheduled = false;
+  #logger: Logger;
   #defaultMetricsEnabled: {
     cpuTime: boolean;
     wallTime: boolean;
@@ -41,6 +47,7 @@ export class MetricsTail {
     this.#metricSinks = options.sinks;
     this.#maxBufferSize = options.maxBufferSize || 100;
     this.#maxBufferDuration = Math.min(options.maxBufferDuration || 5, 30);
+    this.#logger = new Logger(options.logLevel);
 
     // Set default metrics configuration (all enabled by default)
     this.#defaultMetricsEnabled = {
@@ -81,7 +88,7 @@ export class MetricsTail {
             timestamp: event.timestamp,
           });
         } else {
-          console.warn("Received invalid metric payload:", message);
+          this.#logger.warn("Received invalid metric payload:", message);
         }
       }
     }
@@ -140,10 +147,10 @@ export class MetricsTail {
         const sinkErrors = errors.map((error) => {
           return `${error.reason instanceof Error ? error.reason.message : String(error.reason)}`;
         });
-        console.error(`Failed to flush metrics to ${errors.length} sink(s): ${sinkErrors.join(', ')}`);
+        this.#logger.error(`Failed to flush metrics to ${errors.length} sink(s): ${sinkErrors.join(', ')}`);
       }
     } catch (error) {
-      console.error("Error flushing batch:", error);
+      this.#logger.error("Error flushing batch:", error);
     }
   }
 

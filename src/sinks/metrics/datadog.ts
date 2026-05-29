@@ -1,4 +1,5 @@
 import type { ExportedMetricPayload } from "../../types";
+import { Logger, type LogLevel } from "../../logger";
 import { env } from "cloudflare:workers";
 import type { MetricSink } from "../sink";
 export interface DatadogMetricSinkOptions {
@@ -16,6 +17,12 @@ export interface DatadogMetricSinkOptions {
    * Custom endpoint URL override (for testing or proxies)
    */
   endpoint?: string;
+
+  /**
+   * Log level for internal operational messages.
+   * Default: "warn"
+   */
+  logLevel?: LogLevel;
 }
 
 /**
@@ -27,12 +34,14 @@ export class DatadogMetricSink implements MetricSink {
     site: string;
     endpoint: string;
   };
+  private readonly logger: Logger;
 
   constructor(options?: DatadogMetricSinkOptions) {
+    this.logger = new Logger(options?.logLevel);
     // @ts-ignore
     const apiKey = options?.apiKey || env.DD_API_KEY || env.DATADOG_API_KEY;
     if (!apiKey || apiKey.length === 0) {
-      console.error("Datadog API key was not found. Provide it in the sink options or set the DD_API_KEY environment variable. Metrics will not be sent to Datadog.");
+      this.logger.error("Datadog API key was not found. Provide it in the sink options or set the DD_API_KEY environment variable. Metrics will not be sent to Datadog.");
     }
 
     // @ts-ignore
@@ -87,7 +96,7 @@ export class DatadogMetricSink implements MetricSink {
    */
   private async sendToDatadog(metrics: DatadogMetric[]): Promise<void> {
     if (!this.options.apiKey || this.options.apiKey.length === 0) {
-      console.warn(`Datadog API key was not found. Dropping ${metrics.length} metrics.`);
+      this.logger.warn(`Datadog API key was not found. Dropping ${metrics.length} metrics.`);
       return;
     }
     

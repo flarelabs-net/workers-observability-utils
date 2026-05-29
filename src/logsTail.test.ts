@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { LogsTail } from "./logsTail";
 import type { LogSink } from "./sinks/sink";
-import type { TraceItem } from "@cloudflare/workers-types";
 
 class TestLogSink implements LogSink {
   receivedLogs: TraceItem[] = [];

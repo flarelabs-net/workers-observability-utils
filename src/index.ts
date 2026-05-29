@@ -7,6 +7,7 @@
 export * from "./metrics";
 export * from "./tail";
 export * from "./sinks/metrics/datadog";
+export type { LogLevel } from "./logger";
 
 import * as metrics from "./metrics";
 import { TailExporter } from "./tail";

@@ -13,20 +13,22 @@
   ],
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     },
     "./metrics": {
-      "import": "./dist/metrics.js",
-      "types": "./dist/metrics.d.ts"
+      "types": "./dist/metrics.d.ts",
+      "import": "./dist/metrics.js"
     },
     "./tail": {
-      "import": "./dist/tail.js",
-      "types": "./dist/tail.d.ts"
+      "types": "./dist/tail.d.ts",
+      "import": "./dist/tail.js"
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "rolldown -c",
+    "typecheck": "tsc --noEmit",
+    "check:publint": "publint",
     "prepublishOnly": "pnpm run build",
     "test": "vitest",
     "lint:fix": "biome lint --fix",
@@ -42,13 +44,16 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@cloudflare/vitest-pool-workers": "^0.8.32",
-    "@cloudflare/workers-types": "^4.20250519.0",
+    "@cloudflare/vitest-pool-workers": "^0.16.8",
+    "@cloudflare/workers-types": "^4.20260521.1",
     "@types/node": "^22.15.19",
     "biome": "^0.3.3",
     "release-it": "^19.0.3",
-    "typescript": "^5.2.2",
-    "vitest": "^3.1.4"
+    "publint": "^0.3.21",
+    "rolldown": "^1.0.3",
+    "rolldown-plugin-dts": "^0.25.1",
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.4"
   },
   "dependencies": {
     "flat": "^6.0.1",
@@ -56,5 +61,11 @@
   },
   "volta": {
     "node": "24.4.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd"
+    ]
   }
 }
